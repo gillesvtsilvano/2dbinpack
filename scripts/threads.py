@@ -1,3 +1,5 @@
+#!/usr/bin/env pytho
+
 time=30
 
 def main():
