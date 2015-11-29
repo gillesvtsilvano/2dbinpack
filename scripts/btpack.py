@@ -45,9 +45,7 @@ class Packer:
 	
 	def splitNode(self, node, w, h):
 		node.used = True
-		#node.down = {x: node.x, y: node.y + h, w: node.w, h: node.h - h}
 		node.down = Node(node.x , node.y + h, node.w, node.h - h)
-		#node.right = {x: node.x + w, y: node.y, w: node.w - w, h: h}
 		node.right = Node(node.x + w, node.y, node.w - w, h)
 		print('Splited in: {} and {}'.format(node.down, node.right))
 		return node
@@ -62,6 +60,13 @@ if __name__ == "__main__":
 	while(True):
 		w = int(raw_input('Insert bin w: '))
 		h = int(raw_input('Insert bin h: '))
-		for p in L:
-			if (p.fit([Node(0, 0, w, h)]))):
-			# Continuar		
+		if (w is 0 and h is 0):
+			print(len(L))
+		else:
+			for p in L:
+				if (not p.fit([Node(0, 0, w, h)])):
+					p = Packer(100, 100)
+					p.fit([Node(0, 0, w, h)])
+					L.append(p)
+					break
+				
