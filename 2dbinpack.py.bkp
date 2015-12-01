@@ -137,9 +137,9 @@ class Packer:
 
 if __name__ == "__main__":
 
-	FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/data/MV_2bp/Class_10.2bp'
+	#FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/data/MV_2bp/Class_10.2bp'
 
-	#FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/class_test2.2bp'
+	FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/class_test2.2bp'
 	
 	"""
 		Read the file in filepath parsing all instances into a
@@ -194,10 +194,10 @@ if __name__ == "__main__":
 
 				result = box.fit([Node(0, 0, b.w, b.h)])
 				if not result:
-
-					packer = Packer(instance.maxW, instance.maxH)
-					packer.fit([Node(0, 0, b.w, b.h)])
-					solutions.append(packer)
+					box = Packer(instance.maxW, instance.maxH)
+					box.fit([Node(0, 0, b.w, b.h)])
+					solutions.append(box)
 					break
+				print('{} stored on {}'.format(b, solutions.index(box)))
+				raw_input('')
 		print(len(solutions))
-				#raw_input('')

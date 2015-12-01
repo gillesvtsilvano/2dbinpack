@@ -194,10 +194,10 @@ if __name__ == "__main__":
 
 				result = box.fit([Node(0, 0, b.w, b.h)])
 				if not result:
-
-					packer = Packer(instance.maxW, instance.maxH)
-					packer.fit([Node(0, 0, b.w, b.h)])
-					solutions.append(packer)
+					box = Packer(instance.maxW, instance.maxH)
+					box.fit([Node(0, 0, b.w, b.h)])
+					solutions.append(box)
 					break
-		print(len(solutions))
+				print('{} stored on {}'.format(b, solutions.index(box)))
 				#raw_input('')
+		print(len(solutions))
