@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+from random import shuffle
+from threading import Thread
+from time import sleep
+import logging
+
 class ParseStates:
 	END=0
 	PCLASS=1
@@ -52,8 +57,9 @@ class Parser:
 
 	def sort(self):
 		for i in self.MV2vpList:
-			i.binSort()
+			i.sortBins()
 
+	
 class MV2vp:
 	def __init__(self):
 		self.bins = []
@@ -70,7 +76,7 @@ class MV2vp:
 			self.bins.append(b)
 
 
-	def binSort(self):
+	def sortBins(self):
    		
 
    		for index in range(1, len(self.bins), 1):
@@ -81,6 +87,23 @@ class MV2vp:
    				self.bins[position]=self.bins[position-1]
    				position = position-1
    			self.bins[position]=current
+
+	def randBins(self):
+		d={}
+		c=0
+		for b in self.bins:
+			d[c] = b
+			c+=1
+
+		keys = list(d.keys())
+		shuffle(keys)
+
+		l=[]	
+		for key in keys:
+			l.append(d[key])
+		
+		self.bins=l
+		
 
 	def __str__(self):
 		s = '{Class: %d, nItems: %d}' % (self.pClass, self.nItems)
@@ -160,49 +183,69 @@ class Packer:
 				self.root, self.root.down, self.root.right)
 
 
+def start(parser):
+	for i in parser.MV2vpList:
+		i.randBins()
+	
+	
+	while True:	
+		for instance in parser.MV2vpList:
+			solutions = [Packer(instance.maxW, instance.maxH)]
+
+			for b in instance.bins:
+
+				#print('Trying to find place for {}'.format(b))
+				current = None
+				currentRate = 0.0
+				for box in solutions:
+			
+					result = box.fit([Node(0, 0, b.w, b.h)])
+					#result = box.findNode(box.root, b.w, b.h)			
+				
+					
+					if result:
+						#rate = ((float(b.w) / float(result.w)) + (float(b.h) / float(result.h))) / 2
+						#if not current:
+						#	current, currentRate, bTmp = result, rate, box
+						#elif currentRate < rate:
+						#	current, currentRate, bTmp = result, rate, box
+						#print('Rate: %f' % rate)
+						break
+						#current = box
+						#print('{} stored on {}'.format(b, solutions.index(box)))	
+				if not result:
+					bTmp = Packer(instance.maxW, instance.maxH)
+					bTmp.fit([Node(0, 0, b.w, b.h)])
+					solutions.append(bTmp)
+					#print('{} Created.'.format(bTmp))
+					#print('{} stored on {}'.format(b, solutions.index(bTmp)))
+				#else:
+				#	bTmp.fit([Node(0, 0, b.w, b.h)])
+					
+				#raw_input('')
+			print(len(solutions))
+	
+
+
 if __name__ == "__main__":
 
 	FILEPATH='./data/MV_2bp/Class_10.2bp'
-
-	#FILEPATH='class_test2.2bp'
+	#FILEPATH='class_test.2bp'
 
 	parser = Parser(FILEPATH)
 	parser.parse()
-	parser.sort()
+	#parser.sort()
+	#start(parser)
 	
-	for instance in parser.MV2vpList:
-		solutions = [Packer(instance.maxW, instance.maxH)]
+	t = Thread(name='MV2bp', target=start, args=(parser,))
+	t.setDaemon(True)
+	
+	s = 10
+	
+	t.start()
+	t.join(s)
+	
+	if t.isAlive():
+		print('Waiting for %s stop or reach five minutes'% t.name)
 
-		for b in instance.bins:
-
-			#print('Trying to find place for {}'.format(b))
-			current = None
-			currentRate = 0.0
-			for box in solutions:
-				
-				#result = box.fit([Node(0, 0, b.w, b.h)])
-				result = box.findNode(box.root, b.w, b.h)			
-			
-					
-				if result:
-					rate = ((float(b.w) / float(result.w)) + (float(b.h) / float(result.h))) / 2
-					if not current:
-						current, currentRate, bTmp = result, rate, box
-					elif currentRate < rate:
-						current, currentRate, bTmp = result, rate, box
-					#print('Rate: %f' % rate)
-					
-					#current = box
-					#print('{} stored on {}'.format(b, solutions.index(box)))	
-			if not result:
-				bTmp = Packer(instance.maxW, instance.maxH)
-				bTmp.fit([Node(0, 0, b.w, b.h)])
-				solutions.append(bTmp)
-				#print('{} Created.'.format(bTmp))
-				#print('{} stored on {}'.format(b, solutions.index(bTmp)))
-			else:
-				bTmp.fit([Node(0, 0, b.w, b.h)])
-				
-			#raw_input('')
-		print(len(solutions))
 
