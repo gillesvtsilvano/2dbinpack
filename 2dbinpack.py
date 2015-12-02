@@ -8,8 +8,6 @@ class ParseStates:
 	MAXBINSIZE=4
 	BINS=5
 	
-
-
 class Parser:
 	
 	States = ParseStates()
@@ -164,37 +162,47 @@ class Packer:
 
 if __name__ == "__main__":
 
-	FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/data/MV_2bp/Class_10.2bp'
+	FILEPATH='./data/MV_2bp/Class_10.2bp'
 
-	#FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/class_test2.2bp'
+	#FILEPATH='class_test2.2bp'
 
 	parser = Parser(FILEPATH)
 	parser.parse()
 	parser.sort()
 	
 	for instance in parser.MV2vpList:
-		#print(instance)
-
-		solutions = []
-		solutions.append(Packer(instance.maxW, instance.maxH))
+		solutions = [Packer(instance.maxW, instance.maxH)]
 
 		for b in instance.bins:
 
 			#print('Trying to find place for {}'.format(b))
-			
-			boxList=[]
+			current = None
+			currentRate = 0.0
 			for box in solutions:
-
-				result = box.fit([Node(0, 0, b.w, b.h)])
+				
+				#result = box.fit([Node(0, 0, b.w, b.h)])
+				result = box.findNode(box.root, b.w, b.h)			
+			
+					
 				if result:
-					#print('{} stored on {}'.format(b, solutions.index(box)))
-					break
+					rate = ((float(b.w) / float(result.w)) + (float(b.h) / float(result.h))) / 2
+					if not current:
+						current, currentRate, bTmp = result, rate, box
+					elif currentRate < rate:
+						current, currentRate, bTmp = result, rate, box
+					#print('Rate: %f' % rate)
+					
+					#current = box
+					#print('{} stored on {}'.format(b, solutions.index(box)))	
 			if not result:
 				bTmp = Packer(instance.maxW, instance.maxH)
 				bTmp.fit([Node(0, 0, b.w, b.h)])
 				solutions.append(bTmp)
 				#print('{} Created.'.format(bTmp))
 				#print('{} stored on {}'.format(b, solutions.index(bTmp)))
+			else:
+				bTmp.fit([Node(0, 0, b.w, b.h)])
 				
 			#raw_input('')
 		print(len(solutions))
+
