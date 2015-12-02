@@ -109,12 +109,13 @@ class Packer:
 			
 			if (node is not None):
 				#print('Found space at: {}'.format(node))
+				#print('{} stored on {}'.format(b, solutions.index(box)))
 				node = self.splitNode(node, n.w, n.h)
 				return True
 			else:
 				#print('No space left at: {}'.format(node))
 				return False
-	
+		
 	def findNode(self, root, w, h):
 		if root.used:
 			return self.findNode(root.right, w, h) or self.findNode(root.down, w, h)
@@ -160,7 +161,7 @@ if __name__ == "__main__":
 	for instance in parser.MV2vpList:
 
 
-		print(instance)
+		#print(instance)
 
 
 		"""
@@ -193,11 +194,15 @@ if __name__ == "__main__":
 			for box in solutions:
 
 				result = box.fit([Node(0, 0, b.w, b.h)])
-				if not result:
-					box = Packer(instance.maxW, instance.maxH)
-					box.fit([Node(0, 0, b.w, b.h)])
-					solutions.append(box)
+				if result:
+					#print('{} stored on {}'.format(b, solutions.index(box)))
 					break
-				print('{} stored on {}'.format(b, solutions.index(box)))
-				#raw_input('')
+			if not result:
+				bTmp = Packer(instance.maxW, instance.maxH)
+				bTmp.fit([Node(0, 0, b.w, b.h)])
+				solutions.append(bTmp)
+				#print('{} Created.'.format(bTmp))
+				#print('{} stored on {}'.format(b, solutions.index(bTmp)))
+				
+			#raw_input('')
 		print(len(solutions))
