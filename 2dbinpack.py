@@ -52,7 +52,9 @@ class Parser:
 					self.state = ParseStates.END
 		print('We found %d instances' % len(self.MV2vpList))
 
-
+	def sort(self):
+		for i in self.MV2vpList:
+			i.binSort()
 
 class MV2vp:
 	def __init__(self):
@@ -68,12 +70,27 @@ class MV2vp:
 		b = Bin(w, h)
 		if (len(self.bins) < self.nItems):
 			self.bins.append(b)
+
+
+	def binSort(self):
+   		
+
+   		for index in range(1, len(self.bins), 1):
+   			current = self.bins[index]
+   			position = index
 	
+   			while position > 0 and self.bins[position-1] < current:
+   				self.bins[position]=self.bins[position-1]
+   				position = position-1
+   			self.bins[position]=current
+
 	def __str__(self):
 		s = '{Class: %d, nItems: %d}' % (self.pClass, self.nItems)
 		for b in self.bins:
 			s += '%s' % b
 		return(s)
+
+
 
 class Bin:
 	def __init__(self, h, w):
@@ -82,6 +99,15 @@ class Bin:
 
 	def __str__(self):
 		return '{%d, %d}' % (self.h, self.w)
+
+	def __eq__(self, other):
+		return (self.h == other.h) and (self.w == other.w)
+
+	def __lt__(self, other):
+		return (self.h * self.w) < (other.h * other.w)
+
+	def __gt__(self, other):
+		return (self.h * self.w) > (other.h * other.w)
 
 
 class Node:
@@ -141,56 +167,22 @@ if __name__ == "__main__":
 	FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/data/MV_2bp/Class_10.2bp'
 
 	#FILEPATH='/Users/gillessilvano/iCloud/UFRN - Mestrado/Otimizacao em Sistemas/2dbinpack/class_test2.2bp'
-	
-	"""
-		Read the file in filepath parsing all instances into a
-		class structure for better manipulation of the bins
-	"""
 
 	parser = Parser(FILEPATH)
 	parser.parse()
-
-	
-	
-	
-	"""
-		Iterate on problem instances found in the file
-	"""
-
+	parser.sort()
 	
 	for instance in parser.MV2vpList:
-
-
 		#print(instance)
 
-
-		"""
-			Initiate list solutions empty to store the amount of needed
-			boxes to store all bins
-		"""
 		solutions = []
-
-		"""
-			Appending a box to our list of boxes. The values of
-			the max boundaries are set here
-		"""
-
 		solutions.append(Packer(instance.maxW, instance.maxH))
-
-		
-		"""
-			Iterate on bins found on problem instance
-		"""
 
 		for b in instance.bins:
 
 			#print('Trying to find place for {}'.format(b))
 			
-			"""
-				Iterate on boxes to find a box that the bin fits. if
-				we can't find a box to store the bin, we create an empty
-				one to put teh bin into
-			"""
+			boxList=[]
 			for box in solutions:
 
 				result = box.fit([Node(0, 0, b.w, b.h)])
