@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-from random import shuffle
-from threading import Thread
-from time import sleep
-import logging
-
 class ParseStates:
 	END=0
 	PCLASS=1
@@ -12,11 +7,11 @@ class ParseStates:
 	INSTANCENO=3
 	MAXBINSIZE=4
 	BINS=5
-
+	
 class Parser:
 	
 	States = ParseStates()
-	
+
 	def __init__(self, filepath):
 		self.state=ParseStates.PCLASS
 		self.l=[]
@@ -35,7 +30,7 @@ class Parser:
 				self.state = ParseStates.PCLASS
 			if self.state is ParseStates.PCLASS:
 				p.pClass = int(i[0])
-				self.state = ParseStates.NOFITEMS
+				self.state = ParseStates.NOFITEMS	
 			elif self.state is ParseStates.NOFITEMS:
 				p.nItems = int(i[0])
 				self.state = ParseStates.INSTANCENO
@@ -43,23 +38,21 @@ class Parser:
 				p.relativeInstanceNumber = int(i[0])
 				p.absoluteInstanceNumber = int(i[1])
 				self.state = ParseStates.MAXBINSIZE
-			elif self.state is ParseStates.MAXBINSIZE:
+			elif self.state is ParseStates.MAXBINSIZE: 
 				p.maxH = int(i[0])
 				p.maxW = int(i[1])
 				self.state = ParseStates.BINS
-			elif self.state is ParseStates.BINS:
+			elif self.state is ParseStates.BINS: 
 				if len(i) is not 0:
 					p.addBin(int(i[0]), int(i[1]))
 				else:
 					self.MV2vpList.append(p)
 					self.state = ParseStates.END
+		print('We found %d instances' % len(self.MV2vpList))
 
-					#print('We found %d instances' % len(self.MV2vpList))
-					
 	def sort(self):
 		for i in self.MV2vpList:
-			i.sortBins()
-
+			i.binSort()
 
 class MV2vp:
 	def __init__(self):
@@ -77,32 +70,17 @@ class MV2vp:
 			self.bins.append(b)
 
 
-	def sortBins(self):
-		for index in range(1, len(self.bins), 1):
-			current = self.bins[index]
-			position = index
-			
-			while position > 0 and self.bins[position-1] < current:
-				self.bins[position]=self.bins[position-1]
-				position = position-1
-			self.bins[position]=current
+	def binSort(self):
+   		
 
-	def randBins(self):
-		d={}
-		c=0
-		for b in self.bins:
-			d[c] = b
-			c+=1
-
-		keys = list(d.keys())
-		shuffle(keys)
-		
-		l=[]
-		for key in keys:
-			l.append(d[key])
-		
-		self.bins=l
-
+   		for index in range(1, len(self.bins), 1):
+   			current = self.bins[index]
+   			position = index
+	
+   			while position > 0 and self.bins[position-1] < current:
+   				self.bins[position]=self.bins[position-1]
+   				position = position-1
+   			self.bins[position]=current
 
 	def __str__(self):
 		s = '{Class: %d, nItems: %d}' % (self.pClass, self.nItems)
@@ -116,16 +94,16 @@ class Bin:
 	def __init__(self, h, w):
 		self.h = h
 		self.w = w
-	
+
 	def __str__(self):
 		return '{%d, %d}' % (self.h, self.w)
-	
+
 	def __eq__(self, other):
 		return (self.h == other.h) and (self.w == other.w)
-	
+
 	def __lt__(self, other):
 		return (self.h * self.w) < (other.h * other.w)
-	
+
 	def __gt__(self, other):
 		return (self.h * self.w) > (other.h * other.w)
 
@@ -137,43 +115,39 @@ class Node:
 		self.y=y
 		self.w=w
 		self.h=h
-		self.down = None
-		self.right = None
 	
 	def __repr__(self):
 		return "Node : {}x{}, {};{}, used: {}".format(
-													  self.w, self.h, self.x, self.y, self.used)
+				self.w, self.h, self.x, self.y, self.used)
 
 
 class Packer:
 	def __init__(self, w, h):
 		self.root = Node(0, 0, w, h)
-	
+
 	def fit(self, blocks):
 		#print('Adding: {}'.format(blocks[0]))
 		for n in blocks:
 			#block = n
 			node = self.findNode(self.root, n.w, n.h)
-			nTmp = None
-			if (node):
-				nTmp = Node(node.x, node.y, node.w, node.h)
+			
+			if (node is not None):
 				#print('Found space at: {}'.format(node))
+				#print('{} stored on {}'.format(b, solutions.index(box)))
 				node = self.splitNode(node, n.w, n.h)
-				#return True
-			#else:
+				return True
+			else:
 				#print('No space left at: {}'.format(node))
-				#return False
-			return nTmp
-
-
+				return False
+		
 	def findNode(self, root, w, h):
 		if root.used:
 			return self.findNode(root.right, w, h) or self.findNode(root.down, w, h)
 		elif (w <= root.w) and (h <= root.h):
-				return root
+			return root
 		else:
 			return None
-
+	
 	def splitNode(self, node, w, h):
 		node.used = True
 		node.down = Node(node.x , node.y + h, node.w, node.h - h)
@@ -183,53 +157,54 @@ class Packer:
 
 	def __repr__(self):
 		return "{}\n{}\n{}".format(
-								   self.root, self.root.down, self.root.right)
-
-
-def start(parser, i):
-
-	for x in parser.MV2vpList:
-		x.randBins()
-
-	while True:
-		for instance in parser.MV2vpList:
-			
-			fd=open('./output{}/{}_{}_{}_{}_{}_{}.txt'.format(i, instance.pClass, instance.nItems, instance.relativeInstanceNumber, instance.absoluteInstanceNumber, instance.maxH, instance.maxW), 'w')
-			
-			solutions = [Packer(instance.maxW, instance.maxH)]
-			
-			for b in instance.bins:
-			#for b in range(len(instance.bins)):
-				for box in solutions:
-					result = box.fit([Node(0, 0, b.w, b.h)])
-					#result = box.fit([Node(0, 0, instance.bins[b].w, instance.bins[b].h)])
-					if result:
-						fd.write('%d:%d:%d:%d:%d\n' %  (result.x, result.y, b.w, b.h, solutions.index(box)))
-						break
-				if not result:
-					bTmp = Packer(instance.maxW, instance.maxH)
-					bTmp.fit([Node(0, 0, b.w, b.h)])
-					#bTmp.fit([Node(0, 0, instance.bins[b].w, instance.bins[b].h)])
-					#print(instance.bins.index(b))
-					solutions.append(bTmp)
-			fd.close()
-
-		  
-
+				self.root, self.root.down, self.root.right)
 
 
 if __name__ == "__main__":
-	
+
 	FILEPATH='./data/MV_2bp/Class_10.2bp'
-	#FILEPATH='class_test.2bp'
+
+	#FILEPATH='class_test2.2bp'
+
 	parser = Parser(FILEPATH)
 	parser.parse()
+	parser.sort()
 	
-	
-	t = Thread(name='MV2bp', target=start, args=(parser,))
-	t.setDaemon(True)
-	
-	s = 5
-	
-	t.start()
-	t.join(s)
+	for instance in parser.MV2vpList:
+		solutions = [Packer(instance.maxW, instance.maxH)]
+
+		for b in instance.bins:
+
+			#print('Trying to find place for {}'.format(b))
+			current = None
+			currentRate = 0.0
+			for box in solutions:
+				
+				#result = box.fit([Node(0, 0, b.w, b.h)])
+				result = box.findNode(box.root, b.w, b.h)			
+			
+					
+				if result:
+					#rate = ((float(b.w) / float(result.w)) + (float(b.h) / float(result.h)))
+					rate = ((float(result.w) / float(b.w)) + (float(result.h) / float(b.w)))
+					if not current:
+						current, currentRate, bTmp = result, rate, box
+						break
+					elif currentRate < rate:
+						current, currentRate, bTmp = result, rate, box
+					#print('Rate: %f' % rate)
+					
+					#current = box
+					#print('{} stored on {}'.format(b, solutions.index(box)))	
+			if not result:
+				bTmp = Packer(instance.maxW, instance.maxH)
+				bTmp.fit([Node(0, 0, b.w, b.h)])
+				solutions.append(bTmp)
+				#print('{} Created.'.format(bTmp))
+				#print('{} stored on {}'.format(b, solutions.index(bTmp)))
+			else:
+				bTmp.fit([Node(0, 0, b.w, b.h)])
+				
+			#raw_input('')
+		print(len(solutions))
+
